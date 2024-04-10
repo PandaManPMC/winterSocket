@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>websocket 测 试</title>
+</head>
+<body>
+<div style="height: 50px;">
+    <input type="text" id="host" value="ws://127.0.0.1:19999/ws" style="width: 50%">
+    <input type="button" id="connect" value="连接" onclick="connect()">
+</div>
+<div style="height: 50px;">
+    <input type="text" id="sdata" style="width: 50%">
+    <input type="button" id="send" value="发送" onclick="send()">
+</div>
+<div style="height: 50px;">
+    <input type="button" id="close" value="关闭连接" onclick="closeWS()">
+</div>
+
+<div>
+    协议：
+    <hr>
+    {"method": "ping"}
+    <hr>
+    {"method": "login","userToken":"abc"}
+    <hr>
+</div>
+
+<div id="datalist"></div>
+
+</body>
+<script>
+    let count = 0
+    var WS = 0
+    var datalist = document.getElementById("datalist")
+    // 连接websocket
+    function connect(){
+        if (WS) {
+            return
+        }
+        var host = document.getElementById("host")
+        console.log(host.value)
+        if (!host.value) {
+            return
+        }
+        WS = new WebSocket(host.value);
+        listenerWS()
+    }
+    // 发送数据
+    function send(){
+        if (!WS) {
+            return
+        }
+        var sdata = document.getElementById("sdata")
+        WS.send(sdata.value);
+        datalist.innerHTML += "<p>发送数据：" + sdata.value + "</p>"
+        sdata.value = ""
+    }
+    // 关闭连接
+    function closeWS(){
+        if (!WS) {
+            return
+        }
+        WS.close()
+        WS = 0
+    }
+    // 监听websocket回调
+    function listenerWS(){
+        WS.onopen = function(evt) {
+            datalist.innerHTML += "<p>连接打开</p>"
+        };
+
+        WS.onmessage = function(evt) {
+            console.log( "收到数据: " + evt.data);
+            count++
+            if (count%100 == 0){
+                datalist.innerHTML = ""
+            }
+            datalist.innerHTML = "<p>收到数据"+ count +"：" + evt.data + "</p>" + datalist.innerHTML
+
+        };
+
+        WS.onclose = function(evt) {
+            console.log("连接关闭");
+            datalist.innerHTML += "<p>连接关闭</p>"
+        };
+    }
+</script>
+</html>
