@@ -33,7 +33,10 @@ func (that *userHandle) Login(conn *winterSocket.WsConn, params proto.LoginReq) 
 	fmt.Println(params.UserToken)
 	//panic(1)
 
-	return proto.NewResponseByCodeMsg(proto.LoginSucceed, "Login 成功")
+	res := make(map[string]any)
+	res["age"] = 100
+	res["name"] = "小黑"
+	return proto.NewResponse(proto.LoginSucceed, "Login 成功", res)
 }
 
 // Ping 客户端 ping
