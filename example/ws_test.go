@@ -1,9 +1,9 @@
 package example
 
 import (
+	"github.com/PandaManPMC/winterSocket"
+	"github.com/PandaManPMC/winterSocket/example/handle"
 	"testing"
-	"winterSocket"
-	"winterSocket/example/handle"
 )
 
 func TestInitSocket(t *testing.T) {

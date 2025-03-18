@@ -2,8 +2,8 @@ package cm
 
 import (
 	"fmt"
+	"github.com/PandaManPMC/winterSocket/example/proto"
 	"time"
-	"winterSocket/example/proto"
 )
 
 // UserConn 会员连接

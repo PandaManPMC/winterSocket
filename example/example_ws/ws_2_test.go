@@ -2,10 +2,10 @@ package example
 
 import (
 	"fmt"
+	"github.com/PandaManPMC/winterSocket"
+	"github.com/PandaManPMC/winterSocket/example/example_ws/wshandle"
 	"testing"
 	"time"
-	"winterSocket"
-	"winterSocket/example/example_ws/wshandle"
 )
 
 func TestInitWs(t *testing.T) {

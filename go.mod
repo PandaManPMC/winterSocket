@@ -1,4 +1,4 @@
-module winterSocket
+module github.com/PandaManPMC/winterSocket
 
 go 1.19
 

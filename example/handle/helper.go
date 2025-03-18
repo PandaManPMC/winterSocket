@@ -2,8 +2,8 @@ package handle
 
 import (
 	"encoding/json"
+	"github.com/PandaManPMC/winterSocket/example/proto"
 	"golang.org/x/net/websocket"
-	"winterSocket/example/proto"
 )
 
 func Write(conn *websocket.Conn, msg *proto.Response) {

@@ -2,14 +2,14 @@ package handle
 
 import (
 	"fmt"
+	"github.com/PandaManPMC/winterSocket/example/cm"
+	"github.com/PandaManPMC/winterSocket/example/proto"
+	"github.com/PandaManPMC/winterSocket/example/util"
 	"golang.org/x/net/websocket"
 	"os"
 	"strconv"
 	"sync/atomic"
 	"time"
-	"winterSocket/example/cm"
-	"winterSocket/example/proto"
-	"winterSocket/example/util"
 )
 
 type SocketTracking struct {

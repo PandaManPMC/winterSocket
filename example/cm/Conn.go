@@ -2,8 +2,8 @@ package cm
 
 import (
 	"encoding/json"
+	"github.com/PandaManPMC/winterSocket/example/proto"
 	"golang.org/x/net/websocket"
-	"winterSocket/example/proto"
 )
 
 type ConnBase struct {

@@ -3,12 +3,12 @@ package cm
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PandaManPMC/winterSocket/example/proto"
+	"github.com/PandaManPMC/winterSocket/example/util"
 	"golang.org/x/net/websocket"
 	"sync"
 	"sync/atomic"
 	"time"
-	"winterSocket/example/proto"
-	"winterSocket/example/util"
 )
 
 type connManager struct {

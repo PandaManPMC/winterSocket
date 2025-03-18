@@ -2,9 +2,9 @@ package wshandle
 
 import (
 	"fmt"
+	"github.com/PandaManPMC/winterSocket"
+	"github.com/PandaManPMC/winterSocket/example/proto"
 	"sync"
-	"winterSocket"
-	"winterSocket/example/proto"
 )
 
 type userHandle struct {

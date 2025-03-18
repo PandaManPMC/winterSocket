@@ -2,12 +2,12 @@ package wshandle
 
 import (
 	"fmt"
+	"github.com/PandaManPMC/winterSocket"
+	"github.com/PandaManPMC/winterSocket/example/proto"
 	"net"
 	"os"
 	"sync/atomic"
 	"time"
-	"winterSocket"
-	"winterSocket/example/proto"
 )
 
 type SocketTracking struct {
