@@ -1,6 +1,9 @@
 package proto
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Response struct {
 	Code int    `json:"code"` // 状态码
@@ -26,4 +29,9 @@ func NewResponseByCodeMsg(code int, msg string) *Response {
 
 func NewPing() Response {
 	return Response{Code: Ping, Data: time.Now().Unix()}
+}
+
+func (that *Response) Bytes() []byte {
+	buf, _ := json.Marshal(that)
+	return buf
 }
