@@ -5,7 +5,6 @@ import (
 	"github.com/PandaManPMC/winterSocket"
 	"github.com/PandaManPMC/winterSocket/example/proto2"
 	"net"
-	"os"
 	"sync/atomic"
 	"time"
 )
@@ -33,11 +32,7 @@ func (*SocketTracking) Connect(conn *winterSocket.WsConn) {
 
 // RecoverError 出现 panic 被捕获
 func (*SocketTracking) RecoverError(conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, err any) {
-	no := conn.Header[DispatcherNo]
-	method := conn.Header[DispatcherMethod]
-
-	fmt.Println(err)
-	println(fmt.Sprintf("RecoverError %s,%s,%s", method, no, string(jsonDataByte)))
+	println(fmt.Sprintf("RecoverError %s,%d,%s", cmd.Cmd, cmd.DisId, string(jsonDataByte)))
 
 	// 响应一个系统错误
 	conn.WriteServerText(proto2.NewResponseError().Bytes())
@@ -45,24 +40,17 @@ func (*SocketTracking) RecoverError(conn *winterSocket.WsConn, cmd *winterSocket
 
 // DispatcherBefore 之前
 func (*SocketTracking) DispatcherBefore(conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte) bool {
-	//xIp := util2.GetRequestIp(conn.Request())
 	xIp := ""
 	serialNumber.Add(1)
-	no := fmt.Sprintf("%d_%d", os.Geteuid(), serialNumber.Load())
-	//conn.Header[DispatcherNo] = no
-	//conn.Header[DispatcherMethod] = cmd
-	//conn.Header[DispatcherBeginTime] = fmt.Sprintf("%d", time.Now().Unix())
-	println(fmt.Sprintf("DispatcherBefore ws %s-%s：%s", xIp, no, jsonDataByte))
+	println(fmt.Sprintf("DispatcherBefore ws %s-%d：%s", xIp, cmd.DisId, jsonDataByte))
 	return true
 }
 
 // DispatcherAfter 之后
 func (*SocketTracking) DispatcherAfter(conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, resultData []byte) {
-	no := conn.Header[DispatcherNo]
-	method := conn.Header[DispatcherMethod]
-	//beginTime, _ := strconv.ParseInt(conn.Header[DispatcherBeginTime], 10, 64)
 	fmt.Println(string(resultData))
-	println(fmt.Sprintf("DispatcherAfter %s-%s,耗时 %d", method, no, time.Now().Unix()))
+	fmt.Println(string(jsonDataByte))
+	println(fmt.Sprintf("DispatcherAfter %s-%d,耗时 %d", cmd.Cmd, cmd.DisId, time.Now().Unix()-cmd.DisTime))
 }
 
 // Disconnect 关闭连接

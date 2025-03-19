@@ -91,7 +91,7 @@ func (that *WsServer) handleJSON(conn *WsConn, jsonDataByte_ []byte) bool {
 	cmd := new(Cmd)
 	cmd.Cmd = string(command)
 	disId, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
-	cmd.DisId = disId.String()
+	cmd.DisId = disId.Int64()
 	cmd.DisTime = time.Now().Unix()
 
 	defer func() {
