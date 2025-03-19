@@ -19,3 +19,13 @@ func (that *WsConn) WriteServerText(buff []byte) error {
 	}
 	return nil
 }
+
+func (that *WsConn) CloseMust() {
+	if e := (*that.Conn).Close(); nil != e {
+		pError("Close()", e)
+	}
+}
+
+func (that *WsConn) Close() error {
+	return (*that.Conn).Close()
+}

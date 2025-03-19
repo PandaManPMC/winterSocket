@@ -59,7 +59,7 @@ func (*SocketTracking) Disconnect(conn *net.Conn, err any) {
 	//_ = cm2.GetInstanceByConnManager().OffLine(conn)
 }
 
-// Dispatcher404 资源未找到
+// Dispatcher404 资源未找到s
 func (*SocketTracking) Dispatcher404(conn *winterSocket.WsConn, route *winterSocket.Cmd, jsonDataByte []byte) {
 	// 404
 	fmt.Println("Dispatcher404：" + route.Cmd + " ::: " + string(jsonDataByte))
