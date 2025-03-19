@@ -2,26 +2,32 @@ package winterSocket
 
 import (
 	"bufio"
+	"crypto/rand"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/gobwas/ws"
 	"io"
+	"math"
+	"math/big"
 	"net"
 	"reflect"
+	"time"
 )
 
 type WsServer struct {
-	dispatcher         func(Cmd, *WsConn, []byte) bool
+	dispatcher         func(Cmd, *WsConn, []byte) (bool, []byte)
 	tracking           WsTrackingInterface
 	route              map[string]reflect.Value
 	jsonRouteSeparator byte // 路由 key 长度
+	maxDisId           *big.Int
 }
 
 func NewWsServer() *WsServer {
 	wsServerInstance := new(WsServer)
 	wsServerInstance.route = make(map[string]reflect.Value)
 	wsServerInstance.jsonRouteSeparator = 38
+	wsServerInstance.maxDisId = big.NewInt(math.MaxInt32)
 	return wsServerInstance
 }
 
@@ -47,7 +53,7 @@ func (that *WsServer) SetTracking(tracking_ WsTrackingInterface) {
 	that.tracking = tracking_
 }
 
-func (that *WsServer) SetDispatcher(dispatcher_ func(Cmd, *WsConn, []byte) bool) {
+func (that *WsServer) SetDispatcher(dispatcher_ func(Cmd, *WsConn, []byte) (bool, []byte)) {
 	that.dispatcher = dispatcher_
 }
 
@@ -63,7 +69,6 @@ func (that *WsServer) Disconnect(conn *net.Conn) {
 
 // handleJSON 处理
 func (that *WsServer) handleJSON(conn *WsConn, jsonDataByte_ []byte) bool {
-
 	// 分隔符
 	separator := -1
 	for i, v := range jsonDataByte_ {
@@ -85,38 +90,38 @@ func (that *WsServer) handleJSON(conn *WsConn, jsonDataByte_ []byte) bool {
 
 	cmd := new(Cmd)
 	cmd.Cmd = string(command)
-	//if e := json.Unmarshal(jsonDataByte, cmd); nil != e {
-	//	pError("", e)
-	//	if nil != that.tracking {
-	//		that.tracking.ParameterUnmarshalError(conn, jsonDataByte)
-	//	}
-	//	return false
-	//}
-
-	if nil != that.tracking {
-		if !that.tracking.DispatcherBefore(conn, cmd, jsonDataByte) {
-			return false
-		}
-	}
+	disId, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	cmd.DisId = disId.String()
+	cmd.DisTime = time.Now().Unix()
 
 	defer func() {
 		if err := recover(); nil != err {
 			if nil != that.tracking {
-				that.tracking.RecoverError(conn, jsonDataByte, err)
+				that.tracking.RecoverError(conn, cmd, jsonDataByte, err)
 			} else {
 				pError("(that *webSocketServer) handle", err)
 			}
 			return
 		}
-		if nil != that.tracking {
-			that.tracking.DispatcherAfter(conn)
-		}
 	}()
 
-	if nil == that.dispatcher {
-		return that.wsJSONDispatcher(cmd, conn, jsonDataByte)
+	if nil != that.tracking && !that.tracking.DispatcherBefore(conn, cmd, jsonDataByte) {
+		return false
 	}
-	return that.dispatcher(*cmd, conn, jsonDataByte)
+
+	isResultOk := false
+	var resultData []byte
+
+	if nil == that.dispatcher {
+		isResultOk, resultData = that.wsJSONDispatcher(cmd, conn, jsonDataByte)
+
+	} else {
+		isResultOk, resultData = that.dispatcher(*cmd, conn, jsonDataByte)
+	}
+	if nil != that.tracking {
+		that.tracking.DispatcherAfter(conn, cmd, jsonDataByte, resultData)
+	}
+	return isResultOk
 }
 
 // handleConnection 监听新连接数据
@@ -224,7 +229,7 @@ func (that *WsServer) listenerConnect(listener net.Listener) {
 				if e := recover(); nil != e {
 					pError("", e)
 					if nil != that.tracking {
-						that.tracking.RecoverError(&con, nil, e)
+						that.tracking.RecoverError(&con, nil, nil, e)
 					}
 				}
 			}()

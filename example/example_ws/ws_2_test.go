@@ -1,9 +1,12 @@
 package example
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/PandaManPMC/winterSocket"
 	"github.com/PandaManPMC/winterSocket/example/example_ws/wshandle"
+	"math"
+	"math/big"
 	"testing"
 	"time"
 )
@@ -61,4 +64,11 @@ func TestGo(t *testing.T) {
 		}
 	}()
 	time.Sleep(100 * time.Minute)
+}
+
+func TestRand(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		result, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+		t.Log(result)
+	}
 }

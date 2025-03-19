@@ -1,4 +1,4 @@
-package proto
+package proto2
 
 const (
 	Ping = 1301 // ping

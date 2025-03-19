@@ -7,14 +7,14 @@ import (
 	"reflect"
 )
 
-func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []byte) bool {
+func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []byte) (bool, []byte) {
 	funVal, isOk := GetRoute(cmd.Cmd)
 
 	if !isOk {
 		if nil != that.tracking {
 			that.tracking.Dispatcher404(conn, cmd, jsonDataByte)
 		}
-		return false
+		return false, nil
 	}
 
 	refMtdType := funVal.Type()
@@ -27,6 +27,8 @@ func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []by
 			methodParams[i] = reflect.ValueOf(conn.Conn)
 		case "*winterSocket.WsConn":
 			methodParams[i] = reflect.ValueOf(conn)
+		case "*winterSocket.Cmd":
+			methodParams[i] = reflect.ValueOf(cmd)
 		default:
 			obj := reflect.New(inType)
 			if err := json.Unmarshal(jsonDataByte, obj.Interface()); nil != err {
@@ -47,7 +49,7 @@ func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []by
 				} else {
 					pError("ParameterUnmarshalError", nil)
 				}
-				return false
+				return false, nil
 			}
 			msg, isOk := requiredParamsReflect(obj, inType, mp)
 			if !isOk {
@@ -56,28 +58,30 @@ func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []by
 				} else {
 					pError("ParameterError", nil)
 				}
-				return false
+				return false, nil
 			}
 		}
 	}
 
+	var res []byte
 	result := funVal.Call(methodParams)
 	if nil != result && 0 < len(result) {
 		rsu := result[0]
 		rsu = reflect.Indirect(rsu)
 		if !rsu.IsValid() {
-			return true
+			return true, nil
 		}
 		switch rsu.Kind() {
 		case reflect.Struct, reflect.Map, reflect.Slice:
-			marshalData, _ := json.Marshal(rsu.Interface())
-			_ = that.WriteText(marshalData, conn.Conn)
+			res, _ = json.Marshal(rsu.Interface())
+			_ = that.WriteText(res, conn.Conn)
 		default:
-			_ = that.WriteText([]byte(rsu.String()), conn.Conn)
+			res = []byte(rsu.String())
+			_ = that.WriteText(res, conn.Conn)
 		}
 	}
 
-	return true
+	return true, res
 }
 
 func (that *WsServer) WriteText(buff []byte, conn *net.Conn) error {

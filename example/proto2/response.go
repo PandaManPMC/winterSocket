@@ -1,4 +1,4 @@
-package proto
+package proto2
 
 import (
 	"encoding/json"

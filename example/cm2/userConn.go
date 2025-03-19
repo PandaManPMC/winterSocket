@@ -1,8 +1,8 @@
-package cm
+package cm2
 
 import (
 	"fmt"
-	"github.com/PandaManPMC/winterSocket/example/proto"
+	"github.com/PandaManPMC/winterSocket/example/proto2"
 	"time"
 )
 
@@ -25,7 +25,7 @@ const (
 
 // Ping 客户端
 func (that *UserConn) Ping() error {
-	if e := that.Send(proto.NewPing()); nil != e {
+	if e := that.Send(proto2.NewPing()); nil != e {
 		println(e)
 		println(fmt.Sprintf("userConn ping %d-%s", that.IdMember, that.UserToken))
 		return e

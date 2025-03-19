@@ -1,8 +1,8 @@
-package cm
+package cm2
 
 import (
 	"encoding/json"
-	"github.com/PandaManPMC/winterSocket/example/proto"
+	"github.com/PandaManPMC/winterSocket/example/proto2"
 	"golang.org/x/net/websocket"
 )
 
@@ -13,7 +13,7 @@ type ConnBase struct {
 }
 
 // Send 发送消息
-func (that *ConnBase) Send(response proto.Response) error {
+func (that *ConnBase) Send(response proto2.Response) error {
 	b, err := json.Marshal(response)
 	if nil != err {
 		return err

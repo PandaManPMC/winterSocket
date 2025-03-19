@@ -1,10 +1,10 @@
-package handle
+package handle2
 
 import (
 	"fmt"
-	"github.com/PandaManPMC/winterSocket/example/cm"
-	"github.com/PandaManPMC/winterSocket/example/proto"
-	"github.com/PandaManPMC/winterSocket/example/util"
+	"github.com/PandaManPMC/winterSocket/example/cm2"
+	"github.com/PandaManPMC/winterSocket/example/proto2"
+	"github.com/PandaManPMC/winterSocket/example/util2"
 	"golang.org/x/net/websocket"
 	"os"
 	"strconv"
@@ -29,9 +29,9 @@ const (
 
 // Connect 新连接
 func (*SocketTracking) Connect(conn *websocket.Conn) {
-	xIp := util.GetRequestIp(conn.Request())
+	xIp := util2.GetRequestIp(conn.Request())
 	println(fmt.Sprintf("webSocketServer ws 新连接%s", xIp))
-	cm.GetInstanceByConnManager().RegisterTempConn(conn)
+	cm2.GetInstanceByConnManager().RegisterTempConn(conn)
 }
 
 // RecoverError 出现 panic 被捕获
@@ -43,12 +43,12 @@ func (*SocketTracking) RecoverError(conn *websocket.Conn, err any) {
 	println(fmt.Sprintf("RecoverError %s,%s", method, no))
 
 	// 响应一个系统错误
-	Write(conn, proto.NewResponseError())
+	Write(conn, proto2.NewResponseError())
 }
 
 // DispatcherBefore 之前
 func (*SocketTracking) DispatcherBefore(conn *websocket.Conn, method, jsonDataStr string) bool {
-	xIp := util.GetRequestIp(conn.Request())
+	xIp := util2.GetRequestIp(conn.Request())
 	serialNumber.Add(1)
 	no := fmt.Sprintf("%d_%d", os.Geteuid(), serialNumber.Load())
 	conn.Request().Header.Set(DispatcherNo, no)
@@ -68,21 +68,21 @@ func (*SocketTracking) DispatcherAfter(conn *websocket.Conn) {
 
 // Disconnect 关闭连接
 func (*SocketTracking) Disconnect(conn *websocket.Conn) {
-	_ = cm.GetInstanceByConnManager().OffLine(conn)
+	_ = cm2.GetInstanceByConnManager().OffLine(conn)
 }
 
 // Dispatcher404 资源未找到
 func (*SocketTracking) Dispatcher404(conn *websocket.Conn) {
 	// 404
-	Write(conn, proto.NewResponseByCode(proto.MethodNotFound))
+	Write(conn, proto2.NewResponseByCode(proto2.MethodNotFound))
 }
 
 // ParameterError 参数错误
 func (*SocketTracking) ParameterError(conn *websocket.Conn, msg string) {
-	Write(conn, proto.NewResponseByCodeMsg(proto.ParameterError, msg))
+	Write(conn, proto2.NewResponseByCodeMsg(proto2.ParameterError, msg))
 }
 
 // ParameterUnmarshalError 数据解析失败
 func (*SocketTracking) ParameterUnmarshalError(conn *websocket.Conn) {
-	Write(conn, proto.NewResponseByCode(proto.ParameterUnmarshalError))
+	Write(conn, proto2.NewResponseByCode(proto2.ParameterUnmarshalError))
 }

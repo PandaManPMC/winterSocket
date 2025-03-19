@@ -5,5 +5,7 @@ type Method struct {
 }
 
 type Cmd struct {
-	Cmd string `json:"cmd"`
+	Cmd     string `json:"cmd"`     // 指令
+	DisId   string `json:"disId"`   // 分发ID
+	DisTime int64  `json:"disTime"` // 分发时间
 }

@@ -1,10 +1,10 @@
-package cm
+package cm2
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PandaManPMC/winterSocket/example/proto"
-	"github.com/PandaManPMC/winterSocket/example/util"
+	"github.com/PandaManPMC/winterSocket/example/proto2"
+	"github.com/PandaManPMC/winterSocket/example/util2"
 	"golang.org/x/net/websocket"
 	"sync"
 	"sync/atomic"
@@ -130,7 +130,7 @@ func (that *connManager) Login(uc *UserConn) bool {
 
 // addIpOnLineCount 增加 ip 在线用户连接数量
 func (that *connManager) addIpOnLineCount(uc *UserConn) {
-	xIp := util.GetRequestIp(uc.Conn.Request())
+	xIp := util2.GetRequestIp(uc.Conn.Request())
 	count, isOk := that.ipOnLineConnCount.Load(xIp)
 	if isOk {
 		c := count.(int)
@@ -143,7 +143,7 @@ func (that *connManager) addIpOnLineCount(uc *UserConn) {
 
 // ReduceIpOnLineCount 减少 IP 在线用户连接数量
 func (that *connManager) ReduceIpOnLineCount(uc *UserConn) {
-	xIp := util.GetRequestIp(uc.Conn.Request())
+	xIp := util2.GetRequestIp(uc.Conn.Request())
 	count, isOk := that.ipOnLineConnCount.Load(xIp)
 	if isOk {
 		c := count.(int)
@@ -173,7 +173,7 @@ func (that *connManager) LastTime(conn *websocket.Conn) {
 }
 
 // WriteAll 向所有连接者写消息，内部是异步的
-func (that *connManager) WriteAll(response *proto.Response) {
+func (that *connManager) WriteAll(response *proto2.Response) {
 	go func() {
 		defer func() {
 			err := recover()
@@ -218,8 +218,8 @@ func (that *connManager) OffLineByUserToken(userToken, msg string) {
 	}
 
 	uc := ucp.(*UserConn)
-	rsp := proto.Response{
-		Code: proto.OffLine,
+	rsp := proto2.Response{
+		Code: proto2.OffLine,
 		Msg:  msg,
 		Data: nil,
 	}

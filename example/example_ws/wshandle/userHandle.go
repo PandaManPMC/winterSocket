@@ -3,7 +3,7 @@ package wshandle
 import (
 	"fmt"
 	"github.com/PandaManPMC/winterSocket"
-	"github.com/PandaManPMC/winterSocket/example/proto"
+	"github.com/PandaManPMC/winterSocket/example/proto2"
 	"sync"
 )
 
@@ -22,7 +22,7 @@ func init() {
 }
 
 // Login 登录
-func (that *userHandle) Login(conn *winterSocket.WsConn, params proto.LoginReq) *proto.Response {
+func (that *userHandle) Login(conn *winterSocket.WsConn, params proto2.LoginReq) *proto2.Response {
 	fmt.Println("Login conn.Header:", conn.Header)
 	fmt.Println(conn.ClientIp)
 
@@ -36,7 +36,7 @@ func (that *userHandle) Login(conn *winterSocket.WsConn, params proto.LoginReq) 
 	res := make(map[string]any)
 	res["age"] = 100
 	res["name"] = "小黑"
-	return proto.NewResponse(proto.LoginSucceed, "Login 成功", res)
+	return proto2.NewResponse(proto2.LoginSucceed, "Login 成功", res)
 }
 
 // Ping 客户端 ping
