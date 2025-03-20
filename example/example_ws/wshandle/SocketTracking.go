@@ -18,12 +18,6 @@ func init() {
 	serialNumber = new(atomic.Uint64)
 }
 
-const (
-	DispatcherNo        = "DispatcherNo"
-	DispatcherMethod    = "DispatcherMethod"
-	DispatcherBeginTime = "DispatcherBeginTime"
-)
-
 // Connect 新连接
 func (*SocketTracking) Connect(conn *winterSocket.WsConn) {
 	println(fmt.Sprintf("webSocketServer ws 新连接%s", conn.Header))
@@ -67,7 +61,7 @@ func (*SocketTracking) Dispatcher404(conn *winterSocket.WsConn, route *winterSoc
 }
 
 // ParameterError 参数错误
-func (*SocketTracking) ParameterError(conn *winterSocket.WsConn, msg string) {
+func (*SocketTracking) ParameterError(conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, msg string) {
 	conn.WriteServerText(proto2.NewResponseByCodeMsg(proto2.ParameterError, msg).Bytes())
 }
 

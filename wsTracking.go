@@ -21,8 +21,8 @@ type WsTrackingInterface interface {
 	Disconnect(*net.Conn, any)
 	// Dispatcher404 资源未找到 conn *winterSocket.WsConn, route *winterSocket.Cmd, jsonDataByte []byte
 	Dispatcher404(*WsConn, *Cmd, []byte)
-	// ParameterError 参数错误 conn *winterSocket.WsConn, msg string
-	ParameterError(*WsConn, string)
+	// ParameterError 参数错误 conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, msg string
+	ParameterError(*WsConn, *Cmd, []byte, string)
 	// ParameterUnmarshalError 数据解析失败 conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte
 	ParameterUnmarshalError(*WsConn, *Cmd, []byte)
 }

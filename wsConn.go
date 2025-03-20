@@ -20,6 +20,12 @@ func (that *WsConn) WriteServerText(buff []byte) error {
 	return nil
 }
 
+func (that *WsConn) WriteServerTextMust(buff []byte) {
+	if e := wsutil.WriteServerText(*that.Conn, buff); nil != e {
+		pError("winterSocket WriteBuff", e)
+	}
+}
+
 func (that *WsConn) CloseMust() {
 	if e := (*that.Conn).Close(); nil != e {
 		pError("Close()", e)

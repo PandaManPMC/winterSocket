@@ -54,7 +54,7 @@ func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []by
 			msg, isOk := requiredParamsReflect(obj, inType, mp)
 			if !isOk {
 				if nil != that.tracking {
-					that.tracking.ParameterError(conn, msg)
+					that.tracking.ParameterError(conn, cmd, jsonDataByte, msg)
 				} else {
 					pError("ParameterError", nil)
 				}
