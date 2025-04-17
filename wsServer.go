@@ -128,7 +128,7 @@ func (that *WsServer) handleJSON(conn *WsConn, jsonDataByte_ []byte) bool {
 func (that *WsServer) handleConnection(conn *WsConn) {
 	defer that.Disconnect(conn.Conn)
 
-	if nil == that.tracking {
+	if nil != that.tracking {
 		that.tracking.Connect(conn)
 	}
 
