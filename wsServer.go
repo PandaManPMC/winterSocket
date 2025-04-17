@@ -57,7 +57,7 @@ func (that *WsServer) SetDispatcher(dispatcher_ func(Cmd, *WsConn, []byte) (bool
 	that.dispatcher = dispatcher_
 }
 
-func (that *WsServer) Disconnect(conn *net.Conn) {
+func (that *WsServer) Disconnect(conn *WsConn) {
 	if nil != that.tracking {
 		that.tracking.Disconnect(conn, nil)
 	} else {
@@ -126,7 +126,7 @@ func (that *WsServer) handleJSON(conn *WsConn, jsonDataByte_ []byte) bool {
 
 // handleConnection 监听新连接数据
 func (that *WsServer) handleConnection(conn *WsConn) {
-	defer that.Disconnect(conn.Conn)
+	defer that.Disconnect(conn)
 
 	if nil != that.tracking {
 		that.tracking.Connect(conn)

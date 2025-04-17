@@ -1,7 +1,5 @@
 package winterSocket
 
-import "net"
-
 var wsTracking WsTrackingInterface
 
 func SetWsTracking(t WsTrackingInterface) {
@@ -18,7 +16,7 @@ type WsTrackingInterface interface {
 	// DispatcherAfter 之后 conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, resultData []byte
 	DispatcherAfter(*WsConn, *Cmd, []byte, []byte)
 	// Disconnect 关闭连接
-	Disconnect(*net.Conn, any)
+	Disconnect(*WsConn, any)
 	// Dispatcher404 资源未找到 conn *winterSocket.WsConn, route *winterSocket.Cmd, jsonDataByte []byte
 	Dispatcher404(*WsConn, *Cmd, []byte)
 	// ParameterError 参数错误 conn *winterSocket.WsConn, cmd *winterSocket.Cmd, jsonDataByte []byte, msg string

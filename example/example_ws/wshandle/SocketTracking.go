@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/PandaManPMC/winterSocket"
 	"github.com/PandaManPMC/winterSocket/example/proto2"
-	"net"
 	"sync/atomic"
 	"time"
 )
@@ -48,7 +47,7 @@ func (*SocketTracking) DispatcherAfter(conn *winterSocket.WsConn, cmd *winterSoc
 }
 
 // Disconnect 关闭连接
-func (*SocketTracking) Disconnect(conn *net.Conn, err any) {
+func (*SocketTracking) Disconnect(conn *winterSocket.WsConn, err any) {
 	fmt.Println(fmt.Sprintf("Disconnect 关闭连接 close %v - err=%s", conn, err))
 	//_ = cm2.GetInstanceByConnManager().OffLine(conn)
 }
