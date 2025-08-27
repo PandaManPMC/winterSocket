@@ -65,9 +65,5 @@ func GetRealClientIp(req http.Header) string {
 		return req.Get("RemoteAddr")
 	}(req)
 
-	if 38 != len(ip) && strings.Contains(ip, ":") {
-		// length 38 is ipv6
-		return strings.Split(ip, ":")[0]
-	}
 	return strings.Trim(ip, " ")
 }
