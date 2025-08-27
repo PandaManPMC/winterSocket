@@ -34,24 +34,39 @@ func GetRealClientIp(req http.Header) string {
 		}
 
 		rIp := req.Get("RemoteAddr")
+		if strings.Contains(rIp, "[") {
+			rIp = strings.ReplaceAll(rIp, "[", "")
+			rIp = strings.ReplaceAll(rIp, "]", "")
+		}
+
 		// RemoteAddr=[::1] or 127.0.0.1
-		if "" != rIp && !strings.Contains(rIp, "[") && !strings.HasPrefix(rIp, "127.") {
+		if "" != rIp && !strings.HasPrefix(rIp, "127.") {
 			return rIp
 		}
 
 		xIp := req.Get("X-Real-IP")
-		if "" != xIp && !strings.Contains(xIp, "[") {
+		if strings.Contains(xIp, "[") {
+			xIp = strings.ReplaceAll(xIp, "[", "")
+			xIp = strings.ReplaceAll(xIp, "]", "")
+		}
+		if "" != xIp {
 			return xIp
 		}
 
 		remoteAddr := req.Get("Remote_addr")
-		if "" != remoteAddr && !strings.Contains(remoteAddr, "[") {
+		if strings.Contains(remoteAddr, "[") {
+			remoteAddr = strings.ReplaceAll(remoteAddr, "[", "")
+			remoteAddr = strings.ReplaceAll(remoteAddr, "]", "")
+		}
+		if "" != remoteAddr {
 			return remoteAddr
 		}
 
 		return req.Get("RemoteAddr")
 	}(req)
+
 	if 38 != len(ip) && strings.Contains(ip, ":") {
+		// length 38 is ipv6
 		return strings.Split(ip, ":")[0]
 	}
 	return strings.Trim(ip, " ")
