@@ -19,13 +19,18 @@ func GetRealClientIp(req http.Header) string {
 	ip := func(req http.Header) string {
 		// 优先使用 X-Forwarded-For
 		fIp := req.Get("X-Forwarded-For")
-		if "" != fIp && !strings.Contains(fIp, "[") {
+		if "" != fIp {
+			if strings.Contains(fIp, "[") {
+				fIp = strings.ReplaceAll(fIp, "[", "")
+				fIp = strings.ReplaceAll(fIp, "]", "")
+			}
+
 			// x.x.x.x,xx.xx.x.x,x.x.x.xx ...
 			if strings.Contains(fIp, ",") {
 				ips := strings.Split(fIp, ",")
-				return ips[0]
+				return strings.TrimSpace(ips[0])
 			}
-			return fIp
+			return strings.TrimSpace(fIp)
 		}
 
 		rIp := req.Get("RemoteAddr")
@@ -46,7 +51,7 @@ func GetRealClientIp(req http.Header) string {
 
 		return req.Get("RemoteAddr")
 	}(req)
-	if strings.Contains(ip, ":") {
+	if 38 != len(ip) && strings.Contains(ip, ":") {
 		return strings.Split(ip, ":")[0]
 	}
 	return strings.Trim(ip, " ")
