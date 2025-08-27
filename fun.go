@@ -65,5 +65,5 @@ func GetRealClientIp(req http.Header) string {
 		return req.Get("RemoteAddr")
 	}(req)
 
-	return strings.Trim(ip, " ")
+	return strings.ReplaceAll(ip, " ", "")
 }
