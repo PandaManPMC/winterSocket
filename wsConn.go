@@ -59,3 +59,12 @@ func (that *WsConn) Close() error {
 	})
 	return err
 }
+
+func (that *WsConn) Ping() error {
+	err := that.WriteFrame(ws.NewPingFrame(nil))
+	if nil != err {
+		pError("write ping failed", err)
+		return err
+	}
+	return nil
+}
