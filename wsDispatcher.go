@@ -3,7 +3,6 @@ package winterSocket
 import (
 	"encoding/json"
 	"github.com/gobwas/ws/wsutil"
-	"net"
 	"reflect"
 )
 
@@ -84,8 +83,8 @@ func (that *WsServer) wsJSONDispatcher(cmd *Cmd, conn *WsConn, jsonDataByte []by
 	return true, res
 }
 
-func (that *WsServer) WriteText(buff []byte, conn *net.Conn) error {
-	if e := wsutil.WriteServerText(*conn, buff); nil != e {
+func (that *WsServer) WriteText(buff []byte, conn BufferedConn) error {
+	if e := wsutil.WriteServerText(conn, buff); nil != e {
 		pError("winterSocket WriteBuff", e)
 		return e
 	}

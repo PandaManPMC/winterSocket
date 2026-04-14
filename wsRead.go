@@ -9,41 +9,49 @@ import (
 	"strings"
 )
 
-// readAndCopyHeaders **读取 HTTP 头，同时保留数据**
 func readAndCopyHeaders(r io.Reader) (http.Header, *bytes.Buffer, error) {
 	headers := http.Header{}
 	var rawHeaders bytes.Buffer
 
-	// **创建 TeeReader：读取数据的同时存到 rawHeaders**
 	tr := io.TeeReader(r, &rawHeaders)
-	br := bufio.NewReader(tr)
+	br := bufio.NewReader(io.LimitReader(tr, 8<<10)) // 限制 8KB
+
+	var requestLine string
 
 	for {
 		line, err := br.ReadString('\n')
 		if err != nil {
 			return nil, nil, err
 		}
-		if line == "\r\n" { // 头部结束
+
+		if line == "\r\n" {
 			break
 		}
 
-		// **解析 HTTP 头**
+		line = strings.TrimRight(line, "\r\n")
+
+		// 处理请求行
+		if !strings.Contains(line, ":") && requestLine == "" {
+			requestLine = line
+			continue
+		}
+
 		key, value, found := strings.Cut(line, ":")
 		if found {
-			headers.Set(strings.TrimSpace(key), strings.TrimSpace(value))
+			key = http.CanonicalHeaderKey(strings.TrimSpace(key))
+			headers.Add(key, strings.TrimSpace(value))
 		}
 	}
 
-	// **返回读取到的 Headers 和原始数据**
 	return headers, &rawHeaders, nil
 }
 
-// bufferedConn **包装连接，确保 `ws.Upgrade()` 仍能读取握手数据**
-type bufferedConn struct {
+// BufferedConn **包装连接，确保 `ws.Upgrade()` 仍能读取握手数据**
+type BufferedConn struct {
 	net.Conn
 	r *bufio.Reader
 }
 
-func (bc *bufferedConn) Read(p []byte) (int, error) {
+func (bc *BufferedConn) Read(p []byte) (int, error) {
 	return bc.r.Read(p)
 }

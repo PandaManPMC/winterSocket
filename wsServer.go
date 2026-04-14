@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,9 @@ type WsServer struct {
 	route              map[string]reflect.Value
 	jsonRouteSeparator byte // 路由 key 长度
 	maxDisId           *big.Int
+	AcceptSem          int64 // 限流
+	MaxMessageSize     int64 // 最大消息
+	ReadDeadlineSecond int64
 }
 
 func NewWsServer() *WsServer {
@@ -28,6 +32,9 @@ func NewWsServer() *WsServer {
 	wsServerInstance.route = make(map[string]reflect.Value)
 	wsServerInstance.jsonRouteSeparator = 38
 	wsServerInstance.maxDisId = big.NewInt(math.MaxInt32)
+	wsServerInstance.MaxMessageSize = 1 << 20 // 1MB（按业务调整）
+	wsServerInstance.AcceptSem = 10240
+	wsServerInstance.ReadDeadlineSecond = 90
 	return wsServerInstance
 }
 
@@ -134,30 +141,49 @@ func (that *WsServer) handleConnection(conn *WsConn) {
 
 	// 读取 WebSocket 消息
 	for {
-		header, err := ws.ReadHeader(*conn.Conn)
+		_ = conn.Conn.SetReadDeadline(time.Now().Add(time.Duration(that.ReadDeadlineSecond) * time.Second))
+
+		header, err := ws.ReadHeader(&conn.Conn)
 		if nil != err {
 			pError("", err)
 			return
 		}
 
+		if header.Length > that.MaxMessageSize {
+			pError("payload too large", header.Length)
+			return
+		}
+
+		payload := make([]byte, header.Length)
+		_, err = io.ReadFull(&conn.Conn, payload)
+		if nil != err {
+			pError("", err)
+			return
+		}
+		if header.Masked {
+			ws.Cipher(payload, header.Mask, 0)
+		}
+
 		switch header.OpCode {
-		case ws.OpContinuation:
 		case ws.OpText:
-			payload := make([]byte, header.Length)
-			_, err = io.ReadFull(*conn.Conn, payload)
-			if nil != err {
-				pError("", err)
-				return
-			}
-			if header.Masked {
-				ws.Cipher(payload, header.Mask, 0)
-			}
 			that.handleJSON(conn, payload)
 		case ws.OpBinary:
+			// ignore or handle
+		case ws.OpContinuation:
+			// 不支持分片
+			return
 		case ws.OpClose:
+			_ = conn.WriteFrame(ws.NewCloseFrame(payload))
 			return
 		case ws.OpPing:
+			err = conn.WriteFrame(ws.NewPongFrame(payload))
+			if nil != err {
+				pError("write pong failed", err)
+				return
+			}
 		case ws.OpPong:
+			conn.LastPong = time.Now()
+			_ = conn.Conn.SetReadDeadline(time.Now().Add(time.Duration(that.ReadDeadlineSecond) * time.Second))
 		}
 	}
 }
@@ -183,6 +209,7 @@ func (that *WsServer) Listener(port uint16) error {
 
 // listenerConnect 处理连接
 func (that *WsServer) listenerConnect(listener net.Listener) {
+	sem := make(chan struct{}, that.AcceptSem)
 	for {
 		conn, err := listener.Accept()
 		if nil != err {
@@ -199,7 +226,7 @@ func (that *WsServer) listenerConnect(listener net.Listener) {
 		}
 
 		// **确保 `ws.Upgrade()` 可以继续读取数据**
-		buffConn := &bufferedConn{Conn: conn, r: bufio.NewReader(io.MultiReader(rawData, conn))}
+		buffConn := BufferedConn{Conn: conn, r: bufio.NewReader(io.MultiReader(rawData, conn))}
 
 		remoteAddr := headers.Get("RemoteAddr")
 		if "" == remoteAddr {
@@ -208,7 +235,7 @@ func (that *WsServer) listenerConnect(listener net.Listener) {
 		clientIp := GetRealClientIp(headers)
 
 		// WebSocket 握手
-		_, err = ws.Upgrade(buffConn)
+		_, err = ws.Upgrade(&buffConn)
 		if nil != err {
 			pError("ws.Upgrade(conn)", err)
 			if e := conn.Close(); nil != e {
@@ -218,16 +245,22 @@ func (that *WsServer) listenerConnect(listener net.Listener) {
 		}
 
 		con := WsConn{
-			Conn:     &buffConn.Conn,
+			Conn:     buffConn,
 			Header:   headers,
 			ClientIp: clientIp,
+			LastPong: time.Now(),
+			mutex:    sync.Mutex{},
+			once:     sync.Once{},
 		}
 
+		sem <- struct{}{}
 		// 处理链接数据
 		go func() {
+			defer func() { <-sem }()
 			defer func() {
 				if e := recover(); nil != e {
 					pError("", e)
+					_ = con.Close()
 					if nil != that.tracking {
 						that.tracking.RecoverError(&con, nil, nil, e)
 					}

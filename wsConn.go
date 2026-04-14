@@ -1,19 +1,37 @@
 package winterSocket
 
 import (
+	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"net"
 	"net/http"
+	"sync"
+	"time"
 )
 
 type WsConn struct {
-	Conn     *net.Conn
+	Conn     BufferedConn
 	Header   http.Header
 	ClientIp string
+	LastPong time.Time
+	mutex    sync.Mutex
+	once     sync.Once
+}
+
+func (that *WsConn) WriteFrame(frame ws.Frame) error {
+	that.mutex.Lock()
+	defer that.mutex.Unlock()
+
+	_ = that.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	return ws.WriteFrame(that.Conn, frame)
 }
 
 func (that *WsConn) WriteServerText(buff []byte) error {
-	if e := wsutil.WriteServerText(*that.Conn, buff); nil != e {
+	that.mutex.Lock()
+	defer that.mutex.Unlock()
+
+	_ = that.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+
+	if e := wsutil.WriteServerText(that.Conn, buff); e != nil {
 		pError("winterSocket WriteBuff", e)
 		return e
 	}
@@ -21,17 +39,23 @@ func (that *WsConn) WriteServerText(buff []byte) error {
 }
 
 func (that *WsConn) WriteServerTextMust(buff []byte) {
-	if e := wsutil.WriteServerText(*that.Conn, buff); nil != e {
-		pError("winterSocket WriteBuff", e)
-	}
+	_ = that.WriteServerText(buff)
 }
 
 func (that *WsConn) CloseMust() {
-	if e := (*that.Conn).Close(); nil != e {
-		pError("Close()", e)
-	}
+	_ = that.Close()
 }
 
 func (that *WsConn) Close() error {
-	return (*that.Conn).Close()
+	var err error
+	that.once.Do(func() {
+		that.mutex.Lock()
+		defer that.mutex.Unlock()
+
+		_ = that.Conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+		_ = ws.WriteFrame(that.Conn, ws.NewCloseFrame(nil))
+
+		err = that.Conn.Close()
+	})
+	return err
 }
